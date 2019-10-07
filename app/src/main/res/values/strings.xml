@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">WhereIsMyCheese</string>
+    <string name="note_hint">Leave a cheesy note..</string>
+    <string name="save_cheese">Save cheese</string>
+    <string name="geofence_start_activity">GEOFENCE_ID</string>
+    <string name="mapbox_access_token" translatable="false">
+        pk.eyJ1IjoidWdvbW1pcmlrd2UiLCJhIjoiY2sxOTc3NHFoMDBicDNpcGE1eGR5b3B1aCJ9.D6NYEcIG2yZbMZZSq_0jNw
+    </string>
+</resources>
