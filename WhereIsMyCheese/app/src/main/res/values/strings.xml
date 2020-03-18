@@ -2,4 +2,6 @@
     <string name="app_name">WhereIsMyCheese</string>
     <string name="note_hint">Leave a cheesy note..</string>
     <string name="save_cheese">Save cheese</string>
+    <string name="notification_channel_name">cheeseNotification</string>
+    <string name="notification_channel_description">Notify user when cheese is found</string>
 </resources>
