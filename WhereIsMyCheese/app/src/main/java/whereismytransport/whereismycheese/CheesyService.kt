@@ -1,11 +1,14 @@
 package whereismytransport.whereismycheese
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
-import android.os.Looper
+
 import com.mapbox.android.core.location.*
 import java.lang.ref.WeakReference
 
@@ -23,9 +26,20 @@ class CheesyService : Service() {
     private val binder = CheesyBinder()
     private val treasureChest: MutableList<CheesyTreasure> = mutableListOf()
 
+    override fun onCreate() {
+        super.onCreate()
+        startForeground(1, getNotification())
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        locationEngine.removeLocationUpdates(callback);
+        locationEngine.removeLocationUpdates(callback)
+        stopSelf()
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
+        return START_NOT_STICKY
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -44,29 +58,50 @@ class CheesyService : Service() {
                 .setMaxWaitTime(DEFAULT_MAX_WAIT_TIME)
                 .build()
 
-        if(context is MainActivity) {
+        if (context is MainActivity) {
             callback = LocationCallback(context)
-            locationEngine.requestLocationUpdates(locationRequest, callback, Looper.getMainLooper())
+            locationEngine.requestLocationUpdates(locationRequest, callback, null)
         }
     }
 
     inner class CheesyBinder : Binder() {
         fun getService(): CheesyService = this@CheesyService
     }
-}
 
-private class LocationCallback(activity: Context?) : LocationEngineCallback<LocationEngineResult> {
 
-    private var activityWeakReference = WeakReference(activity as MainActivity)
 
-    override fun onSuccess(result: LocationEngineResult?) {
-        val activity = activityWeakReference.get()
 
-        activity.apply {
-            this?.map?.locationComponent?.forceLocationUpdate(result?.lastLocation)
+    inner class LocationCallback(context: Context?) : LocationEngineCallback<LocationEngineResult> {
+
+        private var activityWeakReference = WeakReference(context as MainActivity)
+
+        override fun onSuccess(result: LocationEngineResult?) {
+            activityWeakReference.get().apply {
+                //Implementing custom location callback requires forcing the location update on the mapBoxMap
+                this?.map?.locationComponent?.forceLocationUpdate(result?.lastLocation)
+
+                treasureChest.forEachIndexed { index, cheesyTreasure ->
+                    val distance = result?.lastLocation?.distanceTo(cheesyTreasure.location)?.compareTo(50.00f) ?: 1
+                    if (distance < 0) {
+                        this?.notifyCheeseFound(cheesyTreasure)
+                        treasureChest.removeAt(index)
+                        this?.removeTastyCheeseFromMap(cheesyTreasure.marker)
+                        return@apply
+                    }
+                }
+            }
+        }
+
+        override fun onFailure(exception: Exception) {
+
         }
     }
 
-    override fun onFailure(exception: Exception) {
+    private fun getNotification(): Notification? {
+        val channel = NotificationChannel("CheesyService", "CheesyServiceChannel", NotificationManager.IMPORTANCE_DEFAULT)
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.createNotificationChannel(channel)
+        val builder = Notification.Builder(applicationContext, "CheesyService").setAutoCancel(true)
+        return builder.build()
     }
 }
