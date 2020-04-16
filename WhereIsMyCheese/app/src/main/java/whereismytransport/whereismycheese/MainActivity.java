@@ -58,11 +58,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /*
-        TODO: input your mapbox access token here, or use another map library (I am only trying to help you know..)
-        LINK: https://www.mapbox.com/account/access-tokens/ -- It's free :)
-        */
-        Mapbox.getInstance(this, "INPUT_YOUR_MAPBOX_TOKEN_HERE");
+        Mapbox.getInstance(this, "pk.eyJ1IjoiYXRtbmciLCJhIjoiY2s5Mno5bDVxMDA3cDNnbnBoYXVpeHB3aiJ9.uaH2HfpqQEh9bG2bMNDAcw");
 
         mapView = (MapView) findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
