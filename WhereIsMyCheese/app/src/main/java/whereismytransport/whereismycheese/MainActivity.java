@@ -7,11 +7,11 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.DrawableCompat;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Icon;
@@ -22,6 +22,7 @@ import com.mapbox.mapboxsdk.geometry.LatLng;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
+import com.mapbox.mapboxsdk.maps.Style;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,9 +57,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
         Mapbox.getInstance(this, "pk.eyJ1IjoiYXRtbmciLCJhIjoiY2s5Mno5bDVxMDA3cDNnbnBoYXVpeHB3aiJ9.uaH2HfpqQEh9bG2bMNDAcw");
+        setContentView(R.layout.activity_main);
 
         mapView = (MapView) findViewById(R.id.mapView);
         mapView.onCreate(savedInstanceState);
@@ -99,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
         mapView.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(MapboxMap mapboxMap) {
+                mapboxMap.setStyle(new Style.Builder().fromUri(getResources().getString(R.string.mapbox_style_light)));
                 MainActivity.this.map = mapboxMap;
                 setupLongPressListener();
             }
@@ -106,10 +108,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupLongPressListener() {
-        map.setOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
+        map.addOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
             @Override
-            public void onMapLongClick(@NonNull LatLng point) {
+            public boolean onMapLongClick(@androidx.annotation.NonNull LatLng point) {
                 createCheesyNote(point);
+                return false;
             }
         });
     }

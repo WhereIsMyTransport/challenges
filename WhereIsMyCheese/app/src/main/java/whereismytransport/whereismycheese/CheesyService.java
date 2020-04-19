@@ -3,7 +3,7 @@ package whereismytransport.whereismycheese;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * In order to help the app determine if you are near a cheezy note, you will need to use Location somehow..

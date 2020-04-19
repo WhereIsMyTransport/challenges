@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="whereismytransport.whereismycheese.MainActivity">
 
-    <android.support.v7.widget.LinearLayoutCompat xmlns:mapbox="http://schemas.android.com/apk/res-auto"
+    <androidx.appcompat.widget.LinearLayoutCompat xmlns:mapbox="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -13,10 +13,9 @@
             android:id="@+id/mapView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            mapbox:mapbox_styleUrl="@string/mapbox_style_light"
             mapbox:mapbox_cameraTargetLat="-33.9249"
             mapbox:mapbox_cameraTargetLng="18.4241"
-            mapbox:mapbox_cameraZoom="17"></com.mapbox.mapboxsdk.maps.MapView>
+            mapbox:mapbox_cameraZoom="17" />
 
-    </android.support.v7.widget.LinearLayoutCompat>
-</android.support.constraint.ConstraintLayout>
+    </androidx.appcompat.widget.LinearLayoutCompat>
+</androidx.constraintlayout.widget.ConstraintLayout>
