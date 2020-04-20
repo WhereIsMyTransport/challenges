@@ -4,15 +4,12 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
-
-import java.util.List;
 
 public class GeofenceEventReceiver extends BroadcastReceiver {
 
@@ -25,9 +22,6 @@ public class GeofenceEventReceiver extends BroadcastReceiver {
         }
 
         if (geofencingEvent.getGeofenceTransition() == Geofence.GEOFENCE_TRANSITION_ENTER) {
-            Toast.makeText(context, "onReceive", Toast.LENGTH_SHORT).show();
-            List<Geofence> geofences = geofencingEvent.getTriggeringGeofences();
-            String requestId = geofences.get(0).getRequestId();
             sendNotification(context);
         }
     }

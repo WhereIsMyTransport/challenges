@@ -34,6 +34,7 @@ public class CheesyService extends Service {
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
     private GeofencingClient geofencingClient;
+    private PendingIntent geofencePendingIntent;
 
     @Nullable
     @Override
@@ -49,6 +50,7 @@ public class CheesyService extends Service {
         mLocationRequest = createLocationRequest();
         mLocationCallback = new LocationCallback();
         geofencingClient = LocationServices.getGeofencingClient(this);
+        geofencingClient.removeGeofences(getGeofencePendingIntent());
     }
 
     @Override
@@ -121,6 +123,14 @@ public class CheesyService extends Service {
         }
     };
 
+    private PendingIntent getGeofencePendingIntent() {
+        if (geofencePendingIntent == null) {
+            Intent intent = new Intent(this, GeofenceEventReceiver.class);
+            geofencePendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        }
+        return geofencePendingIntent;
+    }
+
     private void addGeofence(double latitude, double longitude) {
         Geofence geofence = new Geofence.Builder()
                 .setRequestId(createGeofenceRequestId(latitude, longitude))
@@ -132,10 +142,7 @@ public class CheesyService extends Service {
         GeofencingRequest geofenceRequest = new GeofencingRequest.Builder()
                 .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
                 .addGeofence(geofence).build();
-
-        Intent intent = new Intent(this, GeofenceEventReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        geofencingClient.addGeofences(geofenceRequest, pendingIntent);
+        geofencingClient.addGeofences(geofenceRequest, getGeofencePendingIntent());
     }
 
     private void removeGeofence(double latitude, double longitude) {

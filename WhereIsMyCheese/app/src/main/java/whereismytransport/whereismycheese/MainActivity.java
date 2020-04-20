@@ -11,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -22,6 +23,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.mapbox.geojson.Point;
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Icon;
 import com.mapbox.mapboxsdk.annotations.IconFactory;
@@ -36,9 +38,12 @@ import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
 import com.mapbox.mapboxsdk.maps.Style;
+import com.mapbox.turf.TurfMeasurement;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.mapbox.turf.TurfConstants.UNIT_METERS;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -111,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void SetupNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(Constants.NOTIFICATION_CHANNEL_ID,
+            NotificationChannel channel = new NotificationChannel(Constants.NOTIFICATION.CHANNEL_ID,
                     getString(R.string.channel_name), NotificationManager.IMPORTANCE_HIGH);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
@@ -175,11 +180,22 @@ public class MainActivity extends AppCompatActivity {
         map.setOnMarkerClickListener(new MapboxMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(@NonNull Marker marker) {
-                showNote(marker);
+                if (discoverable(marker))
+                    showNote(marker);
                 return true;
             }
 
         });
+    }
+
+    private boolean discoverable(Marker marker) {
+        Point targetPoint = Point.fromLngLat(marker.getPosition().getLongitude(), marker.getPosition().getLatitude());
+        Location lastLocation = map.getLocationComponent().getLastKnownLocation();
+        Point devicePoint = Point.fromLngLat(lastLocation.getLongitude(), lastLocation.getLatitude());
+        double distance = TurfMeasurement.distance(devicePoint, targetPoint, UNIT_METERS);
+
+        // maximum discoverable distance is 50 meter
+        return distance < 50;
     }
 
     private void createCheesyNote(final LatLng point) {
