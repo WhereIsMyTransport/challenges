@@ -2,4 +2,7 @@
     <string name="app_name">WhereIsMyCheese</string>
     <string name="note_hint">Leave a cheesy note..</string>
     <string name="save_cheese">Save cheese</string>
+    <string name="cheese_discovered">Cheese Discovered!</string>
+    <string name="pickup_cheese">Pickup cheese</string>
+
 </resources>

@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
                 MainActivity.this.map = mapboxMap;
-                setupLongPressListener();
+                setupClickListener();
             }
         });
     }
@@ -129,13 +129,21 @@ public class MainActivity extends AppCompatActivity {
         locationComponent.setRenderMode(RenderMode.COMPASS);
     }
 
-    private void setupLongPressListener() {
+    private void setupClickListener() {
         map.addOnMapLongClickListener(new MapboxMap.OnMapLongClickListener() {
             @Override
             public boolean onMapLongClick(@androidx.annotation.NonNull LatLng point) {
                 createCheesyNote(point);
                 return true;
             }
+        });
+        map.setOnMarkerClickListener(new MapboxMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(@NonNull Marker marker) {
+                showNote(marker);
+                return true;
+            }
+
         });
     }
 
@@ -149,6 +157,16 @@ public class MainActivity extends AppCompatActivity {
         note.show();
     }
 
+    private void showNote(final Marker marker) {
+        CheesyDiscoverDialog dialog = new CheesyDiscoverDialog(this, marker.getTitle(), new CheesyDiscoverDialog.IDiscoverDialogListener() {
+            @Override
+            public void onNoteDiscovered() {
+                removeCheeseFromMap(marker);
+            }
+        });
+        dialog.show();
+    }
+
     private void addCheeseToMap(LatLng point, String content) {
         IconFactory iconFactory = IconFactory.getInstance(MainActivity.this);
         Icon icon = iconFactory.fromBitmap(getBitmapFromDrawableId(R.drawable.cheese64));
@@ -157,6 +175,10 @@ public class MainActivity extends AppCompatActivity {
         marker.setPosition(point);
         marker.setTitle(content);
         markers.add(map.addMarker(marker));
+    }
+
+    private void removeCheeseFromMap(Marker marker) {
+        map.removeMarker(marker);
     }
 
     private Bitmap getBitmapFromDrawableId(int drawableId) {
