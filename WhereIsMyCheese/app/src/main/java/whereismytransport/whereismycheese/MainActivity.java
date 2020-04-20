@@ -1,6 +1,8 @@
 package whereismytransport.whereismycheese;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -69,10 +71,10 @@ public class MainActivity extends AppCompatActivity {
     private BroadcastReceiver mRestoreDataReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (intent != null && intent.getAction().equals(CheesyService.ACTION_RESTORE_NOTE_RESPONSE)) {
+            if (intent != null && intent.getAction().equals(Constants.ACTION.RESTORE_NOTE_RESPONSE)) {
                 Toast.makeText(MainActivity.this, intent.getAction(), Toast.LENGTH_SHORT).show();
 
-                List<CheesyNoteStore.CheesyNote> noteList = (List<CheesyNoteStore.CheesyNote>) intent.getSerializableExtra("note");
+                List<CheesyNoteStore.CheesyNote> noteList = (List<CheesyNoteStore.CheesyNote>) intent.getSerializableExtra(Constants.KEY.NOTE);
                 for (CheesyNoteStore.CheesyNote note : noteList) {
                     LatLng point = new LatLng(note.latitude, note.longitude);
                     addCheeseToMap(point, note.content);
@@ -85,8 +87,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        LocalBroadcastManager.getInstance(this).registerReceiver(mRestoreDataReceiver, new IntentFilter(CheesyService.ACTION_RESTORE_NOTE_RESPONSE));
-
+        LocalBroadcastManager.getInstance(this).registerReceiver(mRestoreDataReceiver, new IntentFilter(Constants.ACTION.RESTORE_NOTE_RESPONSE));
+        SetupNotification();
         Mapbox.getInstance(this, "pk.eyJ1IjoiYXRtbmciLCJhIjoiY2s5Mno5bDVxMDA3cDNnbnBoYXVpeHB3aiJ9.uaH2HfpqQEh9bG2bMNDAcw");
         setContentView(R.layout.activity_main);
 
@@ -104,6 +106,15 @@ public class MainActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     Constants.PERMISSIONS.ACCESS_FINE_LOCATION);
+        }
+    }
+
+    private void SetupNotification() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(Constants.NOTIFICATION_CHANNEL_ID,
+                    getString(R.string.channel_name), NotificationManager.IMPORTANCE_HIGH);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
         }
     }
 
@@ -232,23 +243,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void saveNote(LatLng point, String content) {
-        Intent intent = new Intent(CheesyService.ACTION_ADD_NOTE);
-        intent.putExtra("lat", point.getLatitude());
-        intent.putExtra("lon", point.getLongitude());
-        intent.putExtra("content", content);
+        Intent intent = new Intent(Constants.ACTION.ADD_NOTE);
+        intent.putExtra(Constants.KEY.LATITUDE, point.getLatitude());
+        intent.putExtra(Constants.KEY.LONGITUDE, point.getLongitude());
+        intent.putExtra(Constants.KEY.CONTENT, content);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void removeNote(LatLng point, String content) {
-        Intent intent = new Intent(CheesyService.ACTION_REMOVE_NOTE);
-        intent.putExtra("lat", point.getLatitude());
-        intent.putExtra("lon", point.getLongitude());
-        intent.putExtra("content", content);
+        Intent intent = new Intent(Constants.ACTION.REMOVE_NOTE);
+        intent.putExtra(Constants.KEY.LATITUDE, point.getLatitude());
+        intent.putExtra(Constants.KEY.LONGITUDE, point.getLongitude());
+        intent.putExtra(Constants.KEY.CONTENT, content);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     private void restoreNotes() {
-        Intent intent = new Intent(CheesyService.ACTION_RESTORE_NOTE);
+        Intent intent = new Intent(Constants.ACTION.RESTORE_NOTE);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 

@@ -19,6 +19,7 @@
             </intent-filter>
         </activity>
         <service android:name=".CheesyService"></service>
+        <receiver android:name=".GeofenceEventReceiver"/>
     </application>
 
 </manifest>

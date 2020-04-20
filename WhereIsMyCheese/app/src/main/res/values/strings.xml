@@ -4,5 +4,8 @@
     <string name="save_cheese">Save cheese</string>
     <string name="cheese_discovered">Cheese Discovered!</string>
     <string name="pickup_cheese">Pickup cheese</string>
+    <string name="notification_title" >Cheese found!</string>
+    <string name="notification_message" >Cheese near you</string>
+    <string name="channel_name">Cheesy Note</string>
 
 </resources>

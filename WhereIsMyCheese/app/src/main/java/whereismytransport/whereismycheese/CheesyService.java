@@ -1,5 +1,6 @@
 package whereismytransport.whereismycheese;
 
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,11 +13,16 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * In order to help the app determine if you are near a cheezy note, you will need to use Location somehow..
@@ -27,11 +33,7 @@ public class CheesyService extends Service {
     private FusedLocationProviderClient mLocationClient;
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
-
-    public static final String ACTION_ADD_NOTE = "ADD_NOTE";
-    public static final String ACTION_REMOVE_NOTE = "REMOVE_NOTE";
-    public static final String ACTION_RESTORE_NOTE = "RESTORE_NOTE";
-    public static final String ACTION_RESTORE_NOTE_RESPONSE = "RESPONSE";
+    private GeofencingClient geofencingClient;
 
     @Nullable
     @Override
@@ -43,16 +45,10 @@ public class CheesyService extends Service {
     public void onCreate() {
         super.onCreate();
         registerEventReceiver();
-
-        if (mLocationClient == null) {
-            mLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        }
-        if (mLocationRequest == null) {
-            mLocationRequest = createLocationRequest();
-        }
-        if (mLocationCallback == null) {
-            mLocationCallback = new LocationCallback();
-        }
+        mLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mLocationRequest = createLocationRequest();
+        mLocationCallback = new LocationCallback();
+        geofencingClient = LocationServices.getGeofencingClient(this);
     }
 
     @Override
@@ -83,16 +79,16 @@ public class CheesyService extends Service {
 
     private void restoreNotes() {
         Intent responseIntent = new Intent(this, MainActivity.class);
-        responseIntent.setAction(ACTION_RESTORE_NOTE_RESPONSE);
-        responseIntent.putExtra("note", (Serializable) CheesyNoteStore.getInstance().getNoteList());
+        responseIntent.setAction(Constants.ACTION.RESTORE_NOTE_RESPONSE);
+        responseIntent.putExtra(Constants.KEY.NOTE, (Serializable) CheesyNoteStore.getInstance().getNoteList());
         LocalBroadcastManager.getInstance(CheesyService.this).sendBroadcast(responseIntent);
     }
 
     private void registerEventReceiver() {
         IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_ADD_NOTE);
-        filter.addAction(ACTION_REMOVE_NOTE);
-        filter.addAction(ACTION_RESTORE_NOTE);
+        filter.addAction(Constants.ACTION.ADD_NOTE);
+        filter.addAction(Constants.ACTION.REMOVE_NOTE);
+        filter.addAction(Constants.ACTION.RESTORE_NOTE);
         LocalBroadcastManager.getInstance(this).registerReceiver(mMapEventReceiver, filter);
     }
 
@@ -103,21 +99,53 @@ public class CheesyService extends Service {
                 return;
             }
 
+            double latitude = intent.getDoubleExtra(Constants.KEY.LATITUDE, 0);
+            double longitude = intent.getDoubleExtra(Constants.KEY.LONGITUDE, 0);
+            String content = intent.getStringExtra(Constants.KEY.CONTENT);
+
             switch (intent.getAction()) {
-                case ACTION_ADD_NOTE:
-                    CheesyNoteStore.getInstance().addNote(
-                            intent.getDoubleExtra("lat", 0), intent.getDoubleExtra("lon", 0), intent.getStringExtra("content"));
+                case Constants.ACTION.ADD_NOTE:
+                    CheesyNoteStore.getInstance().addNote(latitude, longitude, content);
+                    addGeofence(latitude, longitude);
                     break;
 
-                case ACTION_REMOVE_NOTE:
-                    CheesyNoteStore.getInstance().removeNote(
-                            intent.getDoubleExtra("lat", 0), intent.getDoubleExtra("lon", 0), intent.getStringExtra("content"));
+                case Constants.ACTION.REMOVE_NOTE:
+                    CheesyNoteStore.getInstance().removeNote(latitude, longitude, content);
+                    removeGeofence(latitude, longitude);
                     break;
 
-                case ACTION_RESTORE_NOTE:
+                case Constants.ACTION.RESTORE_NOTE:
                     restoreNotes();
                     break;
             }
         }
     };
+
+    private void addGeofence(double latitude, double longitude) {
+        Geofence geofence = new Geofence.Builder()
+                .setRequestId(createGeofenceRequestId(latitude, longitude))
+                .setCircularRegion(latitude, longitude, Constants.GEOFENCE.RADIUS_IN_METERS)
+                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                .build();
+
+        GeofencingRequest geofenceRequest = new GeofencingRequest.Builder()
+                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+                .addGeofence(geofence).build();
+
+        Intent intent = new Intent(this, GeofenceEventReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        geofencingClient.addGeofences(geofenceRequest, pendingIntent);
+    }
+
+    private void removeGeofence(double latitude, double longitude) {
+        List<String> list = new ArrayList<>();
+        list.add(createGeofenceRequestId(latitude, longitude));
+        geofencingClient.removeGeofences(list);
+    }
+
+    private String createGeofenceRequestId(double latitude, double longitude) {
+        return latitude + "," + longitude;
+    }
+
 }
