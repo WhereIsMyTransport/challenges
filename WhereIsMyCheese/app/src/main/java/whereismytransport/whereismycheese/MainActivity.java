@@ -1,6 +1,7 @@
 package whereismytransport.whereismycheese;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -8,10 +9,11 @@ import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.mapbox.mapboxsdk.Mapbox;
 import com.mapbox.mapboxsdk.annotations.Icon;
@@ -19,6 +21,10 @@ import com.mapbox.mapboxsdk.annotations.IconFactory;
 import com.mapbox.mapboxsdk.annotations.Marker;
 import com.mapbox.mapboxsdk.annotations.MarkerOptions;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.location.LocationComponent;
+import com.mapbox.mapboxsdk.location.LocationComponentActivationOptions;
+import com.mapbox.mapboxsdk.location.modes.CameraMode;
+import com.mapbox.mapboxsdk.location.modes.RenderMode;
 import com.mapbox.mapboxsdk.maps.MapView;
 import com.mapbox.mapboxsdk.maps.MapboxMap;
 import com.mapbox.mapboxsdk.maps.OnMapReadyCallback;
@@ -70,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
             initializeMap();
+            startService(new Intent(this, CheesyService.class));
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
@@ -87,6 +94,7 @@ public class MainActivity extends AppCompatActivity {
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     //Permission granted
                     initializeMap();
+                    startService(new Intent(this, CheesyService.class));
                 } else {
                     // permission denied, boo! Fine, no cheese for you!
                     // No need to do anything here, for this exercise we only care about people who like cheese and have location setting on.
@@ -100,11 +108,25 @@ public class MainActivity extends AppCompatActivity {
         mapView.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(MapboxMap mapboxMap) {
-                mapboxMap.setStyle(new Style.Builder().fromUri(getResources().getString(R.string.mapbox_style_light)));
+                Style.Builder style = new Style.Builder().fromUri(getResources().getString(R.string.mapbox_style_light));
+                mapboxMap.setStyle(style, new Style.OnStyleLoaded() {
+                    @Override
+                    public void onStyleLoaded(@NonNull Style style) {
+                        enabledLocationComponent(style);
+                    }
+                });
                 MainActivity.this.map = mapboxMap;
                 setupLongPressListener();
             }
         });
+    }
+
+    private void enabledLocationComponent(Style style) {
+        final LocationComponent locationComponent = map.getLocationComponent();
+        locationComponent.activateLocationComponent(LocationComponentActivationOptions.builder(this, style).useDefaultLocationEngine(true).build());
+        locationComponent.setLocationComponentEnabled(true);
+        locationComponent.setCameraMode(CameraMode.TRACKING);
+        locationComponent.setRenderMode(RenderMode.COMPASS);
     }
 
     private void setupLongPressListener() {
@@ -112,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onMapLongClick(@androidx.annotation.NonNull LatLng point) {
                 createCheesyNote(point);
-                return false;
+                return true;
             }
         });
     }
