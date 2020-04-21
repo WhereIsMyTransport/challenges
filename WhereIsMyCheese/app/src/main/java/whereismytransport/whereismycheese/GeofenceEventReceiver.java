@@ -33,8 +33,8 @@ public class GeofenceEventReceiver extends BroadcastReceiver {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, Constants.NOTIFICATION.CHANNEL_ID)
                 .setSmallIcon(R.drawable.black_outline_logo)
-                .setContentTitle(context.getString(R.string.notification_title))
-                .setContentText(context.getString(R.string.notification_message))
+                .setContentTitle(context.getString(R.string.notification_discover_title))
+                .setContentText(context.getString(R.string.notification_discover_message))
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setContentIntent(pendingIntent)
                 .setAutoCancel(true);

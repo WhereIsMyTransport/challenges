@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.os.Looper;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -55,6 +56,7 @@ public class CheesyService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        setupForeground();
         startLocationUpdates();
         return START_STICKY;
     }
@@ -63,6 +65,18 @@ public class CheesyService extends Service {
     public void onDestroy() {
         super.onDestroy();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mMapEventReceiver);
+    }
+
+    private void setupForeground() {
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, Constants.NOTIFICATION.CHANNEL_ID)
+                .setContentTitle(getText(R.string.notification_search_title))
+                .setSmallIcon(R.drawable.black_outline_logo)
+                .setContentIntent(pendingIntent);
+        startForeground(Constants.NOTIFICATION.FOREGROUND_NOTIFICATION_ID, builder.build());
     }
 
     protected LocationRequest createLocationRequest() {

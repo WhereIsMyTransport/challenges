@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
             initializeMap();
-            startService(new Intent(this, CheesyService.class));
+            startCheesyService();
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
@@ -133,13 +133,21 @@ public class MainActivity extends AppCompatActivity {
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     //Permission granted
                     initializeMap();
-                    startService(new Intent(this, CheesyService.class));
+                    startCheesyService();
                 } else {
                     // permission denied, boo! Fine, no cheese for you!
                     // No need to do anything here, for this exercise we only care about people who like cheese and have location setting on.
                 }
                 return;
             }
+        }
+    }
+
+    private void startCheesyService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(new Intent(this, CheesyService.class));
+        } else {
+            startService(new Intent(this, CheesyService.class));
         }
     }
 

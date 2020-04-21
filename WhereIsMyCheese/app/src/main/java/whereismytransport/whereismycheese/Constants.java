@@ -29,7 +29,7 @@ public class Constants {
     public interface NOTIFICATION {
         public static final String CHANNEL_ID = "100";
         public static final int NOTIFICATION_ID = 100;
-
+        public static final int FOREGROUND_NOTIFICATION_ID = 200;
     }
 
 }
